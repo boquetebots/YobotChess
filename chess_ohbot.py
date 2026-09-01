@@ -20,11 +20,18 @@ WHERE IT LOOKS
 In order, stopping at the first one that exists:
 
   1. OHBOT_DIR in a .env file next to this script
-  2. ../OhbotPi2 and ../Ohbot — the folder NEXT TO this one
-  3. C:\\Projects\\OhbotPi2                      (a normal Windows install)
+  2. ../OhbotPi2, ../OhbotPi and ../Ohbot — the folder NEXT TO this one
+  3. C:\\Projects\\OhbotPi2 and C:\\Projects\\OhbotPi   (a normal Windows install)
   4. D:\\Projects\\OhbotPi2                      (Michael's own PC)
   5. /home/michael/Projects/Ohbot                (the Raspberry Pis)
   6. /Volumes/Projects/Ohbot                     (a Pi mounted on a Mac)
+
+**Why "OhbotPi" is in that list as well as "OhbotPi2".** The folder is called
+OhbotPi2 on Michael's machines, but the GitHub repository it comes from is
+called OhbotPi — so a plain `git clone` on a new computer produces a folder
+named OhbotPi and nothing here would have recognised it. Found 2026-09-01,
+the night before a fresh install at the clubhouse, by cloning the repo and
+looking at what the folder was actually called.
 
 **Looking next door comes second on purpose.** It is the only entry that
 needs no drive letter and no user name, so it is right on every machine as
@@ -59,8 +66,10 @@ def candidate_folders():
     return [
         os.getenv("OHBOT_DIR"),
         os.path.join(parent, "OhbotPi2"),
+        os.path.join(parent, "OhbotPi"),      # what a fresh git clone makes
         os.path.join(parent, "Ohbot"),
         r"C:\Projects\OhbotPi2",
+        r"C:\Projects\OhbotPi",
         r"D:\Projects\OhbotPi2",
         "/home/michael/Projects/Ohbot",
         "/Volumes/Projects/Ohbot",
