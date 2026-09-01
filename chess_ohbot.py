@@ -20,7 +20,9 @@ WHERE IT LOOKS
 In order, stopping at the first one that exists:
 
   1. OHBOT_DIR in a .env file next to this script
-  2. ../OhbotPi2, ../OhbotPi and ../Ohbot — the folder NEXT TO this one
+  2. ../OhbotPi2, ../OhbotPi and ../Ohbot — the folder NEXT TO this one,
+     and the -main versions of those names, which is what GitHub's
+     "Download ZIP" button makes if nobody renames the folder
   3. C:\\Projects\\OhbotPi2 and C:\\Projects\\OhbotPi   (a normal Windows install)
   4. D:\\Projects\\OhbotPi2                      (Michael's own PC)
   5. /home/michael/Projects/Ohbot                (the Raspberry Pis)
@@ -67,6 +69,8 @@ def candidate_folders():
         os.getenv("OHBOT_DIR"),
         os.path.join(parent, "OhbotPi2"),
         os.path.join(parent, "OhbotPi"),      # what a fresh git clone makes
+        os.path.join(parent, "OhbotPi2-main"),  # what GitHub's Download ZIP
+        os.path.join(parent, "OhbotPi-main"),   # makes, if nobody renamed it
         os.path.join(parent, "Ohbot"),
         r"C:\Projects\OhbotPi2",
         r"C:\Projects\OhbotPi",

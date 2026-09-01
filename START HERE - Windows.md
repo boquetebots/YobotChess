@@ -16,7 +16,65 @@ Start here.
 
 ---
 
-## 1. Python
+## 1. Get the files
+
+It all lives on GitHub, in **two** projects:
+
+| Project | What it is | Link |
+|---|---|---|
+| **OhbotPi** | the robot itself — motors, voice, mouth | <https://github.com/boquetebots/OhbotPi> |
+| **YobotChess** | this one — the game, the board, what they say | <https://github.com/boquetebots/YobotChess> |
+
+**A robot plugged into this laptop needs both, and OhbotPi comes first.** Get
+the robot saying hello on its own before you touch chess — chess borrows its
+voice and its motors, and a fault there cannot be fixed from this side. If this
+machine is only running the game and the display, this project on its own is
+enough.
+
+> **Chess asks for no account of its own.** Set the robot project up first —
+> its `START_HERE_Windows.md` walks you through it. One Microsoft Azure speech
+> account is the whole requirement, because that is the voice, and chess
+> borrows it. The robot project also has a conversation feature that needs a
+> second key; nothing in chess reads it, so leave that until you want it.
+
+Make a folder called `C:\Projects` and put them in it **side by side**:
+
+```
+C:\Projects\
+    OhbotPi2\      the robot
+    Chess\         this project
+```
+
+That layout is not decoration. Chess finds the robot code by looking in the
+folder next door, so side by side means there is nothing else to configure.
+
+### The easy way — download the zip
+
+1. Open <https://github.com/boquetebots/YobotChess>
+2. Green **Code** button, then **Download ZIP**
+3. Right click the downloaded file, **Extract All**, into `C:\Projects`
+4. **Rename the new folder from `YobotChess-main` to `Chess`**
+
+Do the same with <https://github.com/boquetebots/OhbotPi>, renaming
+`OhbotPi-main` to `OhbotPi2`.
+
+> **Windows sometimes double-wraps a zip** — you open `Chess` and find another
+> `YobotChess-main` inside it with everything in there. If `SETUP.bat` is not
+> sitting directly in `C:\Projects\Chess`, move the contents up a level.
+
+### The other way — git
+
+If you have git installed, this is better, because `git pull` picks up later
+changes. A zip cannot update itself; you download it again.
+
+```
+cd C:\Projects
+git clone https://github.com/boquetebots/YobotChess.git Chess
+```
+
+---
+
+## 2. Python
 
 Open a Command Prompt and type:
 
@@ -24,7 +82,7 @@ Open a Command Prompt and type:
 python --version
 ```
 
-A version number means you are fine — go to step 2.
+A version number means you are fine — go to step 3.
 
 "Not recognised" means it is not installed. Get it from
 <https://www.python.org/downloads/>. **When the installer asks, tick the box
@@ -32,7 +90,7 @@ that says "Add Python to PATH."** Without that tick nothing here will find it.
 
 ---
 
-## 2. Run SETUP.bat
+## 3. Run SETUP.bat
 
 Double click **`SETUP.bat`**. Once, ever.
 
@@ -51,7 +109,7 @@ what it found.
 
 ---
 
-## 3. Try it with nothing plugged in
+## 4. Try it with nothing plugged in
 
 Double click **`Demo - no robots.bat`**.
 
@@ -63,7 +121,7 @@ Close the black window to stop.
 
 ---
 
-## 4. Check the robot
+## 5. Check the robot
 
 A robot plugged into this laptop needs the **OhbotPi2** project on this same
 laptop. That is where the motors, the Azure voice and the lip sync come from —
@@ -97,7 +155,7 @@ downstream.
 
 ---
 
-## 5. Play a guest
+## 6. Play a guest
 
 Double click **`Play a Human.bat`**.
 
@@ -150,7 +208,7 @@ they pause between turns, and how far behind one has to be before it resigns.
 > The second machine has to be able to reach this laptop on ports **8001** and
 > **8002**. Windows blocks incoming connections by default, so this is the step
 > that catches people. `MAC_SETUP.md` has the exact command. **The guest game
-> in step 5 needs none of this** — it never leaves the laptop.
+> in step 6 needs none of this** — it never leaves the laptop.
 
 ---
 

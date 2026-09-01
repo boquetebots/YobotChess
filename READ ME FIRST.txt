@@ -6,7 +6,7 @@
   against each other in front of a room.
 ======================================================================
 
-  You have just unzipped this. Nothing works yet. Pick your computer
+  You have the files. Nothing works yet. Pick your computer
   and open the one file that matches it:
 
 
@@ -20,6 +20,19 @@
   Those .md files are just text. Any of them will open in Notepad,
   TextEdit, or whatever your computer uses for a text file. They will
   look tidier on GitHub, where the headings come out as headings.
+
+
+----------------------------------------------------------------------
+  DID YOU DOWNLOAD THIS AS A ZIP?
+----------------------------------------------------------------------
+
+  Then your folder is called  YobotChess-main.  Rename it to  Chess
+  and put it in  C:\Projects  (Windows) or  ~/Projects  (Mac and Pi),
+  right next to the robot's own project folder, which should be
+  called  OhbotPi2.
+
+  Side by side is how the game finds the robot. Your START HERE file
+  says it again, with the folders drawn out.
 
 
 ----------------------------------------------------------------------

@@ -873,7 +873,9 @@ class ChessGame:
         time you make it; it reacts on its own next turn instead. That is a
         deliberate choice and it is also why this method is so much simpler
         than play_next_move — no commentary is written, no sentence is
-        returned, and the speaking floor is never touched.
+        returned, and the speaking floor is never claimed. The one piece of
+        it used here is the quiet gap, started at the end, so the robot does
+        not answer the instant you let go of a piece.
 
         The evaluation IS still done, and that is the important part. It is
         what sets last_move_was_blunder, which is what makes the robot's next
@@ -958,6 +960,19 @@ class ChessGame:
 
             log.info("%-5s  %-8s  (played by hand%s)", colour, san,
                      ", BLUNDER" if self.last_move_was_blunder else "")
+
+            # -- Give the guest a moment before the robot answers -------------
+            # Added 2026-09-01. The robot replied the instant a person let go
+            # of a piece, which reads as a machine rather than a thinker.
+            #
+            # The human never takes the speaking floor (see the note in
+            # __init__), so release_floor is never called for their move and
+            # the quiet gap that spaces two robots apart never started. This
+            # line starts it by hand. The robot's next poll is told to wait,
+            # exactly as it would be while the other robot is talking, so no
+            # new machinery is involved. Nothing changes in a robot-against-
+            # robot game: this method is never reached in one.
+            self.quiet_until = time.time() + self.gap
 
             self._settle_clock()
 

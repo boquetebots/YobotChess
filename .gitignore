@@ -85,3 +85,7 @@ _recovery/
 chess_player_from_usb.py
 chess_player_RECOVERY_COPY.pyc
 *.new
+
+# A personal email draft, not part of the project. It would be published
+# with everything else if it were tracked.
+EMAIL - *.txt

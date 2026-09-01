@@ -236,6 +236,12 @@ prints the addresses:
 **Port 8080.** Open as many devices as you like — everything they show comes
 from the server, so they cannot disagree with each other.
 
+**The machine running the show does not need a screen at all.** A headless Pi
+can run `chess_show.py` while you watch the board on a laptop, a tablet or a TV
+across the room. There is nothing extra to set up and nothing to switch off:
+the program never opens a browser itself — that is the Windows `.bat`
+launchers being helpful — it only serves the page to the network.
+
 `/board` is the same board with the **control buttons left off**, for a tablet
 somebody else is holding. It is fully playable when a guest is playing; it
 simply has no Stop all for a stray thumb to find.

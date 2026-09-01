@@ -13,6 +13,39 @@ side, and a bar showing who is winning.
 
 ---
 
+## Where to get it
+
+Two projects, both on GitHub, and a machine with a robot plugged into it needs
+**both**:
+
+| Project | What it is | Link |
+|---|---|---|
+| **OhbotPi** | the robot — motors, Azure voice, lip sync | <https://github.com/boquetebots/OhbotPi> |
+| **YobotChess** | this one — the game, the board, the commentary | <https://github.com/boquetebots/YobotChess> |
+
+Install them **side by side**, because chess finds the robot code by looking in
+the folder next door:
+
+```
+C:\Projects\OhbotPi2      ~/Projects/OhbotPi2
+C:\Projects\Chess         ~/Projects/Chess
+```
+
+With git:
+
+```
+git clone https://github.com/boquetebots/YobotChess.git Chess
+```
+
+Or use the green **Code** button and **Download ZIP** — then rename the folder
+it makes from `YobotChess-main` to `Chess`. Your START HERE file below spells
+this out for your machine.
+
+**Set OhbotPi up first if a robot is involved.** Chess has no voice of its own;
+if the robot cannot say hello from OhbotPi2, nothing on this side will fix it.
+
+---
+
 ## New here? Open one file
 
 | Your computer | Open |
