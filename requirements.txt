@@ -1,0 +1,34 @@
+# Chess robots — the extra bits of Python this project needs
+#
+# Install them all in one go:
+#
+#     Windows:        py -m pip install -r requirements.txt
+#     Pi or Mac:      pip3 install -r requirements.txt
+#
+# You only do this once per computer.
+
+# Knows the rules of chess and talks to the Stockfish engine.
+# Confusingly, the thing you install is called "chess" but the thing you
+# import in code is also "chess". Same package, no relation to the
+# abandoned one of a similar name.
+chess>=1.10.0
+
+# The little web server the two robots connect to.
+# Only needed on the machine running chess_server.py.
+flask>=3.0.0
+
+# Reads API keys out of the .env file so they are never typed into code.
+python-dotenv>=1.0.0
+
+
+# ── NOT installed by pip ─────────────────────────────────────────────────────
+#
+# Stockfish, the chess engine itself, is a separate program:
+#
+#     Raspberry Pi:   sudo apt install stockfish
+#     Mac:            brew install stockfish
+#     Windows:        download from stockfishchess.org, then put the path in
+#                     a .env file:  STOCKFISH_PATH=C:\path\to\stockfish.exe
+#
+# You do NOT need Stockfish to run test_commentary.py, chess_speech.py or
+# chess_templates.py. Those three work with nothing but the chess add-on.

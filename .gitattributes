@@ -1,0 +1,66 @@
+# ============================================================================
+#  .gitattributes - line endings, and what stays out of the download ZIP
+# ============================================================================
+#
+#  PART 1: LINE ENDINGS
+#
+#  Windows ends every line of a text file with two invisible characters.
+#  Mac and the Pi use one. Normally nobody notices - except in a .bat file,
+#  where the wrong ending makes "goto" stop working. The launcher then sails
+#  straight past its own error messages instead of printing them, and you get
+#  a window that flashes and vanishes with no explanation.
+#
+#  The lines below make git hand out the right endings automatically, whoever
+#  downloads it and whatever computer they are on. Do not remove them.
+# ----------------------------------------------------------------------------
+
+*           text=auto
+
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.txt       text eol=crlf
+
+*.sh        text eol=lf
+*.command   text eol=lf
+*.py        text eol=lf
+
+*.jpg       binary
+*.png       binary
+*.exe       binary
+
+
+# ----------------------------------------------------------------------------
+#  PART 2: NOT IN THE DOWNLOAD ZIP
+#
+#  "Code -> Download ZIP" on GitHub leaves out everything listed here, so the
+#  folder a normal person unzips holds only the things they need. NOTHING IS
+#  DELETED - a full `git clone` still gets all of it, and so does this folder
+#  on your Mac.
+#
+#  Put a file back in the ZIP: delete its line.
+#  Hide another one:           add   <name> export-ignore
+#  Names with spaces:          use ? for the space, e.g.  mac?setup.txt
+# ----------------------------------------------------------------------------
+
+.gitattributes          export-ignore
+.gitignore              export-ignore
+
+CLAUDE.md               export-ignore
+HANDOFF_chess_modernization.md  export-ignore
+archive/                export-ignore
+
+# The test_*.py files deliberately STAY in the download. In this project
+# they are not developer leftovers - each one is the documented way to try
+# a part of the show with no robot, no engine and no second computer, and
+# ANIMATION.md and SHOW_SETUP.md both tell you to run them.
+
+Picante2.txt            export-ignore
+Spicy2.txt              export-ignore
+Template_chiriqui_en.txt        export-ignore
+Chess_templates_chiriqui.py     export-ignore
+Chess_templates_local.py        export-ignore
+pana_picante_chiriqui.py        export-ignore
+mac?setup.txt           export-ignore
+Match?start.txt         export-ignore
+
+Push?CHESS?to?GitHub.command    export-ignore

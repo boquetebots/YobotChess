@@ -1,0 +1,56 @@
+======================================================================
+  YOBOT CHESS
+  A robot plays chess out loud, and talks about it while it does.
+
+  Sit down, tap a piece, and play it. Or set two of them going
+  against each other in front of a room.
+======================================================================
+
+  You have just unzipped this. Nothing works yet. Pick your computer
+  and open the one file that matches it:
+
+
+  WINDOWS PC ........ open   START HERE - Windows.md
+
+  RASPBERRY PI ...... open   START HERE - Raspberry Pi.md
+
+  MAC ............... open   START HERE - Mac.md
+
+
+  Those .md files are just text. Any of them will open in Notepad,
+  TextEdit, or whatever your computer uses for a text file. They will
+  look tidier on GitHub, where the headings come out as headings.
+
+
+----------------------------------------------------------------------
+  ONE THING WORTH KNOWING BEFORE YOU START
+----------------------------------------------------------------------
+
+  There are TWO projects, and this is only one of them.
+
+    OhbotPi2   the robot itself - the motors, the voice, the mouth.
+    Chess      this one - the game, the board, what they say about it.
+
+  Chess borrows the robot from OhbotPi2 rather than keeping its own
+  copy, so a fix in one place fixes both. That means:
+
+    * A computer with a ROBOT plugged into it needs BOTH projects.
+    * A computer only running the game and the display needs only
+      this one.
+
+  If you have not set up OhbotPi2 yet, do that first. It is at:
+
+      https://github.com/boquetebots/OhbotPi
+
+
+----------------------------------------------------------------------
+  IN A HURRY? SEE IT WITH NOTHING PLUGGED IN
+----------------------------------------------------------------------
+
+  After the setup step in your START HERE file, this replays a famous
+  game on screen with no robots and no engine at all:
+
+      Windows:     double click   Demo - no robots.bat
+      Mac and Pi:  bash demo.sh
+
+  Then open  http://localhost:8080/  in a browser.

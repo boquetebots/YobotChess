@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yobot chess</title>
+
+<!--
+  The audience display.
+
+  Served by chess_show.py. Everything it needs is in this one file: the
+  board is drawn with the chess characters built into the computer's own
+  fonts, so this page works perfectly with the network cable pulled out.
+  That is deliberate — see "the demo must survive losing the internet" in
+  CLAUDE.md. Nothing here is fetched from the web.
+
+  TO CHANGE THE ROBOTS' NAMES, edit the two lines marked NAMES below.
+  To change their photos, drop white_player.jpg and black_player.jpg into
+  the Chess folder. Nothing in here needs touching for that.
+-->
+
+<style>
+  :root {
+    --ink:      #f2f0e9;
+    --dim:      #8f8d85;
+    --bg:       #121211;
+    --panel:    #1c1c1a;
+    --line:     #33322e;
+    --light-sq: #d8d3c4;
+    --dark-sq:  #6f7a63;
+    --hilite:   #b9a44a;
+    --live:     #7ac07a;
+    --pick:     #d8c25a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #000;
+    color: var(--ink);
+    font-family: "Segoe UI", -apple-system, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    cursor: default;
+  }
+
+  /* The 16:9 stage. It grows to fill whatever screen or projector it is
+     shown on and keeps its shape, with black bars if the screen is not
+     16:9 itself. Every size inside is a percentage of this box, so the
+     layout is identical on a laptop and on a hall projector. */
+  #stage {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(100vw, 177.78vh);
+    height: min(56.25vw, 100vh);
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* On a phone, 100vh is NOT what you can see. It is the screen including
+     the strip the address bar and the toolbar sit over, so the bottom of the
+     board ends up hidden underneath them — which is what "the board is cut
+     off" turned out to be. dvh is the height actually available, and it
+     changes as those toolbars slide away.
+
+     Repeated rather than replaced on purpose: a browser too old to know what
+     dvh means ignores this line and keeps the vh above, which is exactly the
+     behaviour we had before. */
+  @supports (height: 100dvh) {
+    #stage {
+      width: min(100vw, 177.78dvh);
+      height: min(56.25vw, 100dvh);
+    }
+  }
+
+  /* ── the control bar ──────────────────────────────────────────────────
+     Visible while you are setting up, then it fades away on its own so the
+     audience sees only the board. Move the mouse to bring it back. */
+  #bar {
+    flex: none;
+    height: 7.5%;
+    display: flex;
+    align-items: center;
+    gap: 0.8vh;
+    padding: 0 1.2vh;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    font-size: 1.5vh;
+    transition: opacity .5s;
+  }
+  #stage.hushed #bar { opacity: 0; pointer-events: none; }
+
+  button {
+    font: inherit;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 0.6vh;
+    padding: 0.7vh 1.2vh;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover:not(:disabled) { background: #2a2a27; border-color: #55534c; }
+  button:disabled { opacity: .35; cursor: default; }
+  button.on { border-color: var(--live); color: var(--live); }
+  button.go { border-color: var(--hilite); color: var(--hilite); }
+
+  select {
+    font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 0.6vh; padding: 0.6vh;
+  }
+
+  /* The "you are running yesterday's program" banner. Loud on purpose: it
+     is the difference between a two-minute restart and an afternoon spent
+     debugging a fix that was already saved and simply never loaded. */
+  #stale {
+    background: #7d2018;
+    color: #ffe9e6;
+    padding: 1vh 1.4vh;
+    font-size: 1.6vh;
+    line-height: 1.45;
+    border-bottom: 1px solid #b3392c;
+  }
+  #stale b { color: #fff; }
+
+  #bar .spacer { flex: 1; }
+  #bar .note { color: var(--dim); font-size: 1.3vh; }
+
+  /* What the running server is ACTUALLY speaking, as opposed to what the
+     dropdown next to it says. Those two used to be able to disagree in
+     silence, which is how a whole game was played in English with Espanol
+     showing on this bar. Green when they agree, and an unmissable red when
+     they do not. */
+  #lang-live { font-size: 1.3vh; white-space: nowrap; }
+  #lang-live.agrees   { color: var(--live); }
+  #lang-live.disagrees {
+    color: #ff6b5e; font-weight: 600;
+  }
+
+  /* ── the three columns ───────────────────────────────────────────────── */
+  /* position: relative so the fullscreen button can sit in the bottom corner
+     of the board area rather than on top of the footer. */
+  #body { flex: 1; display: flex; min-height: 0; position: relative; }
+
+  .wing {
+    width: 24%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1.2vh; padding: 2vh 1.5vh;
+    transition: background .3s;
+  }
+  .wing.talking { background: #1b1f1a; }
+
+  .portrait {
+    width: 72%; aspect-ratio: 1;
+    border-radius: 1.5vh;
+    background: var(--panel) center/cover no-repeat;
+    border: 2px solid var(--line);
+    transition: border-color .3s;
+  }
+  .wing.talking .portrait { border-color: var(--live); }
+
+  .who   { font-size: 3.2vh; font-weight: 500; }
+  .side  { font-size: 1.6vh; color: var(--dim); letter-spacing: .25vh;
+           text-transform: uppercase; }
+  .clock { font-size: 5.5vh; font-weight: 500; line-height: 1;
+           font-variant-numeric: tabular-nums;
+           font-family: Consolas, Menlo, monospace; color: var(--dim); }
+  .wing.active .clock { color: var(--ink); }
+
+  .badge {
+    font-size: 1.4vh; letter-spacing: .1vh; text-transform: uppercase;
+    color: transparent; border: 1px solid transparent;
+    border-radius: 0.5vh; padding: 0.4vh 1vh;
+  }
+  .wing.talking .badge { color: var(--live); border-color: var(--live); }
+
+  /* ── the middle: evaluation bar, then the board ──────────────────────── */
+  #middle {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; justify-content: center;
+    gap: 1.5vh; padding: 1.5vh 0;
+  }
+
+  #evalbar {
+    height: 100%; width: 1.6vh; flex: none;
+    background: #1b1b19;                 /* black's share */
+    border: 1px solid var(--line);
+    border-radius: 0.8vh;
+    overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  #evalfill {
+    width: 100%; background: var(--light-sq);
+    height: 50%; transition: height .6s ease;
+  }
+
+  #board {
+    height: 100%; aspect-ratio: 1;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    border: 0.4vh solid var(--line);
+    border-radius: 0.6vh;
+    overflow: hidden;
+  }
+  .sq {
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    font-size: 7.6vh; line-height: 1;
+    font-family: "Segoe UI Symbol", "Apple Symbols", "DejaVu Sans", serif;
+  }
+  .sq.l { background: var(--light-sq); }
+  .sq.d { background: var(--dark-sq); }
+  .sq.from::after, .sq.to::after {
+    content: ""; position: absolute; inset: 0;
+    background: var(--hilite); opacity: .38;
+  }
+  .sq span { position: relative; z-index: 1; }
+  .sq span.w { color: #ffffff; text-shadow: 0 0 0.3vh #000, 0 0 0.9vh #0008; }
+  .sq span.b { color: #16150f; }
+
+  /* ── when a person is playing ─────────────────────────────────────────────
+     None of this shows at all in a robot-against-robot game: the classes are
+     only ever added while it is a guest's turn.
+
+     touch-action and user-select are not decoration. Without them a tablet
+     waits 300ms after every tap to see whether you meant to double-tap and
+     zoom, and a firm press selects the chess character as if it were text and
+     pops up a copy/paste bubble over the board. Both make a chessboard
+     miserable to use and neither is obvious until you try it on a real
+     tablet. */
+  /* ── the fullscreen button ────────────────────────────────────────────────
+     Floats over the board rather than living in the control bar, because the
+     guest's tablet at /board has no control bar and is the device that needs
+     it most. Deliberately small and dim until touched. */
+  #b-full {
+    position: absolute;
+    right: 1.4vh; bottom: 1.4vh;
+    z-index: 30;
+    width: 5.2vh; height: 5.2vh;
+    min-width: 34px; min-height: 34px;      /* still tappable on a phone */
+    padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #0009; border-color: #ffffff33;
+    opacity: .45;
+    touch-action: manipulation;
+    transition: opacity .3s;
+  }
+  #b-full:hover, #b-full:focus { opacity: 1; }
+  #b-full svg { width: 55%; height: 55%; fill: none;
+                stroke: var(--ink); stroke-width: 2.4; }
+  #b-full .exit { display: none; }
+  #stage.full #b-full .enter { display: none; }
+  #stage.full #b-full .exit  { display: block; }
+  /* No fullscreen API at all (iPhone Safari). The button would do nothing,
+     so it is not shown — a hint in the footer explains what to do instead. */
+  #stage.nofull #b-full { display: none; }
+
+  /* ── the guest's tablet: /board or /play ──────────────────────────────────
+     Same page, controls left out entirely, so a stray thumb cannot stop the
+     game. Not hidden-until-you-tap like the bar on the desk — genuinely not
+     there. */
+  #stage.guest #bar,
+  #stage.guest #logs { display: none !important; }
+
+  #board.live { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+  #board.live .sq { cursor: pointer; }
+  #board.live .sq.picked { cursor: grabbing; }
+
+  /* The piece you have tapped. */
+  .sq.picked::before {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background: var(--pick); opacity: .55;
+  }
+
+  /* Where it may go. A dot on an empty square, a ring round a piece you can
+     take — the way every chess app does it, because it reads instantly and
+     never hides the piece underneath. */
+  .sq.can::before {
+    content: ""; position: absolute; z-index: 2;
+    left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 30%; height: 30%; border-radius: 50%;
+    background: #0e0e0c; opacity: .34;
+    pointer-events: none;
+  }
+  .sq.can.take::before {
+    width: 88%; height: 88%;
+    background: none;
+    border: 0.9vh solid #0e0e0c; opacity: .32;
+  }
+
+  /* A square that refused a tap. Deliberately brief and quiet — this happens
+     whenever somebody taps while the robot is still thinking, which is not a
+     mistake and should not be scolded. */
+  .sq.refused { animation: refuse .45s ease; }
+  @keyframes refuse {
+    0%, 100% { box-shadow: inset 0 0 0 0 #c0392b00; }
+    40%      { box-shadow: inset 0 0 0 0.7vh #c0392bcc; }
+  }
+
+  /* ── choosing what a pawn becomes ─────────────────────────────────────────
+     Sits over the board rather than beside it, so it is under the thumb that
+     just tapped instead of somewhere else on a large screen. */
+  /* fixed, not absolute: it must cover the whole screen whatever is
+     positioned around it, including once #body became a positioning parent
+     for the fullscreen button. */
+  #promote {
+    position: fixed; inset: 0; z-index: 40;
+    display: none; align-items: center; justify-content: center;
+    background: #000000cc;
+  }
+  #promote.open { display: flex; }
+  #promote .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 1.2vh; padding: 2.4vh 2.8vh; text-align: center;
+  }
+  #promote h3 {
+    font-size: 2.2vh; font-weight: 600; margin-bottom: 1.6vh; color: var(--ink);
+  }
+  #promote .choices { display: flex; gap: 1.4vh; }
+  #promote button {
+    width: 11vh; height: 11vh;
+    font-size: 7vh; line-height: 1;
+    font-family: "Segoe UI Symbol", "Apple Symbols", "DejaVu Sans", serif;
+    background: var(--light-sq); color: #16150f;
+    border: 0.3vh solid var(--line); border-radius: 1vh;
+    cursor: pointer; touch-action: manipulation;
+  }
+  #promote button:hover { background: #fff; }
+  #promote .cancel {
+    margin-top: 1.6vh; font-size: 1.7vh; color: var(--dim);
+    background: none; border: none; width: auto; height: auto;
+    cursor: pointer;
+  }
+
+  /* ── the strip along the bottom ──────────────────────────────────────── */
+  #foot {
+    flex: none; height: 6%;
+    display: flex; align-items: center; justify-content: center;
+    gap: 2.5vh;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    font-size: 1.8vh; color: var(--dim);
+  }
+  #foot b { color: var(--ink); font-weight: 500; }
+  #verdict { font-size: 2.2vh; color: var(--ink); }
+  #hint { color: var(--hilite); }
+
+  /* ── what the programs printed ────────────────────────────────────────
+     Hidden until you ask for it, or until something falls over on its own.
+     A program that fails a second after starting looks exactly like one
+     that is quietly waiting, and this is the only way to tell them apart. */
+  #logs {
+    position: absolute; inset: 7.5% 0 6% 0;
+    background: #0d0d0cf2;
+    display: none;
+    flex-direction: column;
+    padding: 2vh 3vh;
+    gap: 1vh;
+    overflow: hidden;
+  }
+  #logs.open { display: flex; }
+  #logs h2 { font-size: 1.8vh; font-weight: 500; letter-spacing: .1vh;
+             text-transform: uppercase; color: var(--dim); }
+  #logs .pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #logs pre {
+    flex: 1; min-height: 0; overflow-y: auto;
+    font-family: Consolas, Menlo, monospace; font-size: 1.5vh;
+    line-height: 1.45; color: var(--ink); white-space: pre-wrap;
+    background: #000; border: 1px solid var(--line); border-radius: 0.6vh;
+    padding: 1vh 1.5vh; margin-top: .5vh;
+  }
+  #logs pre:empty::before { content: "nothing yet"; color: var(--dim); }
+  #logs .alarm { color: #e08a7a; font-size: 1.7vh; }
+</style>
+</head>
+<body>
+
+<!-- Only ever seen when the program running in the black window is older
+     than the files on the disk. Deliberately across the top of everything,
+     because the whole problem with a stale program is that it looks
+     completely normal. -->
+<div id="stale" hidden></div>
+
+<div id="stage">
+
+  <div id="bar">
+    <button id="b-server">Start game server</button>
+    <button id="b-white">Start Lester</button>
+    <button id="b-black">Start Goldie</button>
+    <button id="b-new" class="go">New game</button>
+    <span class="spacer"></span>
+    <span class="note">Playing</span>
+    <select id="mode">
+      <option value="" selected>robot v robot</option>
+      <option value="white">a person plays White</option>
+      <option value="black">a person plays Black</option>
+    </select>
+    <span class="note">Strength</span>
+    <select id="strength">
+      <!-- The first three use Stockfish's Skill Level dial, which goes well
+           below the 1320 floor of the Elo one. They are the settings a guest
+           can actually beat. -->
+      <option value="gentle">gentle</option>
+      <option value="friendly">friendly</option>
+      <option value="easy">easy</option>
+      <option value="beginner">beginner</option>
+      <option value="club" selected>club</option>
+      <option value="strong">strong</option>
+      <option value="expert">expert</option>
+      <option value="max">max</option>
+    </select>
+    <span class="note">Language</span>
+    <select id="lang">
+      <option value="en" selected>English</option>
+      <option value="es">Español</option>
+    </select>
+    <!-- Filled in by poll(). Empty until the game server is running, because
+         there is nothing to disagree with until then. -->
+    <span id="lang-live"></span>
+    <label class="note" id="polite-wrap">
+      <input type="checkbox" id="polite"> Polite
+    </label>
+    <span class="note">Pause</span>
+    <select id="gap">
+      <option value="0">0.0 s</option>
+      <option value="0.5">0.5 s</option>
+      <option value="0.8" selected>0.8 s</option>
+      <option value="1.2">1.2 s</option>
+      <option value="2">2.0 s</option>
+    </select>
+    <span class="spacer"></span>
+    <span class="note" id="message">F11 for full screen</span>
+    <button id="b-log">Log</button>
+    <button id="b-stop">Stop all</button>
+  </div>
+
+  <div id="logs">
+    <div class="alarm" id="alarm"></div>
+    <div class="pane">
+      <h2>Game server</h2><pre id="log-server"></pre>
+    </div>
+    <div class="pane">
+      <h2 id="h-white">Lester</h2><pre id="log-white"></pre>
+    </div>
+    <div class="pane">
+      <h2 id="h-black">Goldie</h2><pre id="log-black"></pre>
+    </div>
+  </div>
+
+  <div id="body">
+
+    <div class="wing" id="wing-white">
+      <div class="portrait" id="pic-white"></div>
+      <div class="who" id="name-white">Lester</div>
+      <div class="side">White</div>
+      <div class="clock" id="clock-white">0:00</div>
+      <div class="badge">speaking</div>
+    </div>
+
+    <div id="middle">
+      <div id="evalbar"><div id="evalfill"></div></div>
+      <div id="board"></div>
+    </div>
+
+    <button id="b-full" title="Full screen">
+      <svg class="enter" viewBox="0 0 24 24" stroke-linecap="round"
+           stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 3H3v6M15 3h6v6M9 21H3v-6M15 21h6v-6"/>
+      </svg>
+      <svg class="exit" viewBox="0 0 24 24" stroke-linecap="round"
+           stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 9h6V3M21 9h-6V3M3 15h6v6M21 15h-6v6"/>
+      </svg>
+    </button>
+
+    <!-- Only ever shown when a guest's pawn reaches the far rank. -->
+    <div id="promote">
+      <div class="card">
+        <h3>Your pawn becomes...</h3>
+        <div class="choices" id="promote-choices"></div>
+        <button class="cancel" id="promote-cancel">never mind</button>
+      </div>
+    </div>
+
+    <div class="wing" id="wing-black">
+      <div class="portrait" id="pic-black"></div>
+      <div class="who" id="name-black">Goldie</div>
+      <div class="side">Black</div>
+      <div class="clock" id="clock-black">0:00</div>
+      <div class="badge">speaking</div>
+    </div>
+
+  </div>
+
+  <div id="foot">
+    <span>Move <b id="movenum">0</b></span>
+    <span id="lastmove"></span>
+    <span id="hint"></span>
+    <span id="verdict"></span>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+// NAMES — change these two lines to rename the robots on screen.
+// ── Is this the guest's tablet? ──────────────────────────────────────────
+// Opened at /board or /play instead of /. The controls are left out, so a
+// guest cannot press Stop all with the thumb they were about to move a pawn
+// with. Everything else on the page is identical.
+const GUEST_TABLET = /^\/(board|play)\/?$/.test(location.pathname);
+if (GUEST_TABLET) document.getElementById("stage").classList.add("guest");
+
+const NAME_WHITE = "Lester";
+const NAME_BLACK = "Goldie";
+
+// The robot plugged into THIS computer. It is the one that plays a guest,
+// whichever colour the guest leaves it — so its name has to be known
+// separately from the colour it happens to be playing today.
+const NAME_LOCAL = NAME_WHITE;
+
+document.getElementById("name-white").textContent = NAME_WHITE;
+document.getElementById("name-black").textContent = NAME_BLACK;
+document.getElementById("h-white").textContent = NAME_WHITE;
+document.getElementById("h-black").textContent = NAME_BLACK;
+
+// ── the pieces ───────────────────────────────────────────────────────────
+// These are the chess characters built into the computer's own fonts. No
+// image files, no downloads, nothing to go missing.
+const GLYPH = {
+  K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙",
+  k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟"
+};
+
+const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+// Build the 64 squares once. After that only their contents change, which
+// is what stops the board flickering twice a second.
+const boardEl = document.getElementById("board");
+const squares = {};
+const FILES = "abcdefgh";
+for (let rank = 8; rank >= 1; rank--) {
+  for (let file = 0; file < 8; file++) {
+    const name = FILES[file] + rank;
+    const cell = document.createElement("div");
+    cell.className = "sq " + ((file + rank) % 2 ? "l" : "d");
+    cell.innerHTML = "<span></span>";
+    boardEl.appendChild(cell);
+    squares[name] = cell;
+  }
+}
+
+function drawBoard(fen, lastMove) {
+  // A FEN is the position written as text. The part before the first space
+  // is the board itself: eight rows, top to bottom, where a letter is a
+  // piece and a digit is that many empty squares.
+  const rows = (fen || START_FEN).split(" ")[0].split("/");
+  for (let r = 0; r < 8; r++) {
+    let file = 0;
+    for (const ch of rows[r]) {
+      if (ch >= "1" && ch <= "8") {
+        for (let n = 0; n < +ch; n++) {
+          setSquare(FILES[file++] + (8 - r), "");
+        }
+      } else {
+        setSquare(FILES[file++] + (8 - r), ch);
+      }
+    }
+  }
+
+  // Shade the two squares of the move just played, so an audience can see
+  // what moved without being told.
+  for (const cell of Object.values(squares)) {
+    cell.classList.remove("from", "to");
+  }
+  if (lastMove && lastMove.length >= 4) {
+    const from = squares[lastMove.slice(0, 2)];
+    const to = squares[lastMove.slice(2, 4)];
+    if (from) from.classList.add("from");
+    if (to) to.classList.add("to");
+  }
+}
+
+function setSquare(name, piece) {
+  const cell = squares[name];
+  if (!cell) return;
+  const span = cell.firstChild;
+  const glyph = piece ? GLYPH[piece] : "";
+  if (span.textContent !== glyph) span.textContent = glyph;
+  const wanted = piece ? (piece === piece.toUpperCase() ? "w" : "b") : "";
+  if (span.className !== wanted) span.className = wanted;
+}
+
+drawBoard(START_FEN, null);
+
+// ── which way up the board sits ──────────────────────────────────────────
+// A guest playing Black wants Black at the bottom. Nothing about the game
+// changes — only the order the 64 squares are laid out in, which is why the
+// squares are looked up by name everywhere else rather than by position.
+let bottomColour = "white";
+
+function faceThisWay(colour) {
+  if (colour === bottomColour) return;
+  bottomColour = colour;
+  const order = [];
+  if (colour === "white") {
+    for (let rank = 8; rank >= 1; rank--)
+      for (let file = 0; file < 8; file++) order.push(FILES[file] + rank);
+  } else {
+    for (let rank = 1; rank <= 8; rank++)
+      for (let file = 7; file >= 0; file--) order.push(FILES[file] + rank);
+  }
+  for (const name of order) boardEl.appendChild(squares[name]);
+}
+
+// ── a person playing ─────────────────────────────────────────────────────
+// All of this sits idle in a robot-against-robot game: humanColour stays
+// null, legalMoves stays empty, and not one of the squares reacts to a tap.
+
+// Shown in the footer when there is nothing more urgent to say. Set once, on
+// browsers that cannot go full screen at all. Declared up here because the
+// footer is painted twice a second and would otherwise wipe it.
+let fullScreenHint = "";
+
+let humanColour = null;      // "white", "black", or null for two robots
+let myTurn = false;          // is the game waiting for the guest right now
+let legalMoves = [];         // every legal move, as "e2e4", sent by the server
+let picked = null;           // the square whose piece has been tapped
+let sending = false;         // a move is in flight; ignore taps until it lands
+let seenMoveCount = -1;      // to notice the position changing underneath us
+
+function movesFrom(square) {
+  return legalMoves.filter(m => m.slice(0, 2) === square);
+}
+
+function paintSelection() {
+  for (const cell of Object.values(squares)) {
+    cell.classList.remove("picked", "can", "take");
+  }
+  if (!picked) return;
+
+  const here = squares[picked];
+  if (here) here.classList.add("picked");
+
+  for (const move of movesFrom(picked)) {
+    const target = squares[move.slice(2, 4)];
+    if (!target) continue;
+    target.classList.add("can");
+    // A ring rather than a dot when there is something to capture. The piece
+    // is still drawn underneath either way.
+    if (target.firstChild.textContent) target.classList.add("take");
+  }
+}
+
+function refuse(square) {
+  const cell = squares[square];
+  if (!cell) return;
+  cell.classList.remove("refused");
+  void cell.offsetWidth;              // makes the animation run again
+  cell.classList.add("refused");
+  setTimeout(() => cell.classList.remove("refused"), 500);
+}
+
+function tapped(square) {
+  if (!humanColour || sending) return;
+
+  if (!myTurn) {
+    // Not a mistake — this happens every time somebody taps while the robot
+    // is thinking. Say so quietly and do not clear what they had picked.
+    refuse(square);
+    say("Not your turn yet.");
+    return;
+  }
+
+  // Nothing picked yet: pick something that can actually move.
+  if (!picked) {
+    if (movesFrom(square).length) {
+      picked = square;
+      paintSelection();
+    } else if (squares[square].firstChild.textContent) {
+      refuse(square);
+      say("That piece has nowhere to go.");
+    }
+    return;
+  }
+
+  // Tapping the same square again means "changed my mind".
+  if (square === picked) {
+    picked = null;
+    paintSelection();
+    return;
+  }
+
+  const candidates = movesFrom(picked).filter(m => m.slice(2, 4) === square);
+
+  if (candidates.length === 0) {
+    // Not a legal destination. If it is another of their own pieces, treat it
+    // as choosing that one instead — which is what everybody expects and
+    // saves a tap.
+    if (movesFrom(square).length) {
+      picked = square;
+      paintSelection();
+    } else {
+      refuse(square);
+      picked = null;
+      paintSelection();
+    }
+    return;
+  }
+
+  // A pawn reaching the far rank has four different moves to the same square.
+  const promotions = candidates.filter(m => m.length > 4);
+  if (promotions.length) {
+    askWhatItBecomes(picked, square, promotions);
+    return;
+  }
+
+  sendMove(candidates[0]);
+}
+
+for (const [name, cell] of Object.entries(squares)) {
+  // pointerdown, not click: it covers mouse, finger and stylus with one
+  // piece of code, and it fires the moment the finger lands rather than
+  // after the browser has waited to see whether a second tap is coming.
+  cell.addEventListener("pointerdown", event => {
+    if (!humanColour) return;
+    event.preventDefault();
+    tapped(name);
+  });
+}
+
+async function sendMove(uci) {
+  sending = true;
+  picked = null;
+  paintSelection();
+  try {
+    const response = await fetch("/show/human_move", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ move: uci })
+    });
+    const answer = await response.json().catch(() => ({}));
+    if (!answer.ok) {
+      say(answer.message || "That move was not accepted.");
+      refuse(uci.slice(0, 2));
+    } else {
+      say("");
+      // Ask straight away rather than waiting for the next half-second tick,
+      // so the piece appears to move under the finger that moved it.
+      poll();
+    }
+  } catch (err) {
+    say("Could not reach the control program.");
+  } finally {
+    sending = false;
+  }
+}
+
+// ── choosing what a pawn becomes ─────────────────────────────────────────
+const promoteBox = document.getElementById("promote");
+const promoteChoices = document.getElementById("promote-choices");
+
+function askWhatItBecomes(from, to, promotions) {
+  const glyphs = { q: ["♛", "queen"], r: ["♜", "rook"],
+                   b: ["♝", "bishop"], n: ["♞", "knight"] };
+  promoteChoices.innerHTML = "";
+
+  // Built from the moves the server actually offered rather than from a
+  // fixed list of four, so it can never offer something illegal.
+  for (const move of promotions) {
+    const letter = move.slice(4, 5);
+    const [glyph, word] = glyphs[letter] || [letter, letter];
+    const button = document.createElement("button");
+    button.textContent = glyph;
+    button.title = word;
+    button.onclick = () => {
+      closePromotion();
+      sendMove(move);
+    };
+    promoteChoices.appendChild(button);
+  }
+  promoteBox.classList.add("open");
+}
+
+function closePromotion() {
+  promoteBox.classList.remove("open");
+  picked = null;
+  paintSelection();
+}
+
+document.getElementById("promote-cancel").onclick = closePromotion;
+promoteBox.addEventListener("pointerdown", event => {
+  if (event.target === promoteBox) closePromotion();
+});
+
+// ── the clocks ───────────────────────────────────────────────────────────
+// The server sends the real totals twice a second. Between those, the clock
+// of whichever robot's go it is keeps counting on its own, so the numbers
+// move smoothly instead of jumping in half-second steps.
+let clockBase = { white: 0, black: 0 };
+let clockOwner = null;
+let clockStamp = performance.now();
+
+function paintClocks() {
+  const extra = clockOwner ? (performance.now() - clockStamp) / 1000 : 0;
+  for (const colour of ["white", "black"]) {
+    const used = clockBase[colour] + (colour === clockOwner ? extra : 0);
+    document.getElementById("clock-" + colour).textContent = asTime(used);
+  }
+  requestAnimationFrame(paintClocks);
+}
+
+function asTime(seconds) {
+  const whole = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(whole / 60);
+  return minutes + ":" + String(whole % 60).padStart(2, "0");
+}
+requestAnimationFrame(paintClocks);
+
+// ── who is winning ───────────────────────────────────────────────────────
+function paintEval(centipawns) {
+  // Stockfish counts in hundredths of a pawn and its numbers run away to
+  // enormous values once a game is decided. Squashing them through this
+  // curve keeps the bar readable: a pawn up is a visible nudge, a queen up
+  // is nearly the whole bar, and mate is all of it.
+  const cp = Math.max(-2000, Math.min(2000, centipawns || 0));
+  const share = 100 / (1 + Math.exp(-cp / 350));
+  document.getElementById("evalfill").style.height = share.toFixed(1) + "%";
+}
+
+// ── asking the control program what is happening ─────────────────────────
+let programs = { server: false, white: false, black: false };
+
+async function poll() {
+  let state = null;
+  try {
+    const response = await fetch("/show/state", { cache: "no-store" });
+    state = await response.json();
+  } catch (err) {
+    // The control program has gone. Leave the last picture up rather than
+    // wiping the screen in front of an audience.
+    return;
+  }
+
+  const p = state.programs;
+  programs = {
+    server: !!p.server.running,
+    white: !!p.white.running,
+    black: !!(p.black && p.black.running)
+  };
+  paintButton("b-server", programs.server, "game server", "Start", "Stop");
+  // With a guest playing, say which side the robot is taking. Otherwise the
+  // button reads "Start Lester" while the wing opposite says Lester is Black,
+  // and it is not obvious they are the same robot.
+  paintButton("b-white", programs.white,
+              showingHuman ? NAME_LOCAL + " (" + localPlaysColour + ")"
+                           : NAME_WHITE,
+              "Start", "Stop");
+  paintButton("b-black", programs.black, NAME_BLACK, "Start", "Stop");
+
+  const blackButton = document.getElementById("b-black");
+  const macMissing = p.black && p.black.reachable === false;
+  blackButton.disabled = macMissing;
+  blackButton.title = macMissing && p.black.note ? p.black.note : "";
+
+  syncSettingsOnce(state.settings);
+
+  // ── has the program been edited since this window was opened? ─────────
+  // Python cannot reload a file it is already running, and pretending
+  // otherwise is how an afternoon disappears: the page is read off the disk
+  // on every refresh, so a brand new control bar can sit on top of a
+  // months-old program and look perfectly healthy.
+  const stale = state.stale || [];
+  const staleBanner = document.getElementById("stale");
+  if (stale.length) {
+    staleBanner.innerHTML =
+      "<b>This window is running an older copy of the program.</b> "
+      + stale.join(", ") + (stale.length === 1 ? " has" : " have")
+      + " been saved since it was started, and none of those changes are "
+      + "running. Close the black <b>Yobot Chess</b> window and double-click "
+      + "<b>Play Chess.bat</b> again.";
+    staleBanner.hidden = false;
+  } else {
+    staleBanner.hidden = true;
+  }
+
+  // ── is the robot actually speaking the language on this bar? ───────────
+  // This reads what the RUNNING chess server says it is speaking, never the
+  // dropdown. The two used to be able to disagree without a word on screen,
+  // and the first anyone knew of it was an English sentence coming out of
+  // the robot in front of a room expecting Spanish.
+  const liveLang = state.game ? state.game.lang : null;
+  const langBadge = document.getElementById("lang-live");
+  if (!programs.server || !liveLang) {
+    langBadge.textContent = "";
+    langBadge.className = "";
+  } else {
+    const wanted = document.getElementById("lang").value;
+    const spoken = liveLang === "es" ? "Español" : "English";
+    if (liveLang === wanted) {
+      langBadge.textContent = "speaking " + spoken;
+      langBadge.className = "agrees";
+    } else {
+      langBadge.textContent = "SPEAKING " + spoken.toUpperCase()
+                            + " — press Stop, then Start game server";
+      langBadge.className = "disagrees";
+    }
+  }
+
+  // The RUNNING game decides what the wings show, not the dropdown. Changing
+  // the dropdown only takes effect when the chess server is restarted, so
+  // renaming a wing the instant it changed would tell the room a person was
+  // playing while two robots carried on without them.
+  showWhoIsPlaying(state.game ? state.game.human : state.settings.human);
+
+  paintLogs(p);
+
+  const game = state.game;
+  if (!game) {
+    document.getElementById("verdict").textContent = "";
+    document.getElementById("hint").textContent = "";
+    clockOwner = null;
+    myTurn = false;
+    legalMoves = [];
+    boardEl.classList.remove("live");
+    return;
+  }
+
+  // ── who may touch the board ───────────────────────────────────────────
+  // The server decides all of this. The page never works out for itself
+  // whether a move is legal or whose turn it is — those are the two things
+  // it would get wrong, and the chess library already has them right.
+  humanColour = game.human || null;
+  myTurn = !!game.your_move;
+  legalMoves = game.legal_moves || [];
+  boardEl.classList.toggle("live", !!humanColour && myTurn);
+
+  if (humanColour) faceThisWay(humanColour);
+
+  // If the position changed while something was picked — the robot moved, or
+  // a new game started — that selection is about a board that no longer
+  // exists. Drop it rather than letting a stale highlight sit there.
+  if (game.move_count !== seenMoveCount) {
+    seenMoveCount = game.move_count;
+    if (!sending) picked = null;
+  }
+  if (!myTurn && !sending) picked = null;
+
+  drawBoard(game.fen, game.last_move);
+  paintSelection();
+  paintEval(game.eval_cp);
+
+  clockBase = {
+    white: (game.clock && game.clock.white) || 0,
+    black: (game.clock && game.clock.black) || 0
+  };
+  clockStamp = performance.now();
+  clockOwner = game.game_over ? null : (game.speaking || game.turn);
+
+  const wingWhite = document.getElementById("wing-white");
+  const wingBlack = document.getElementById("wing-black");
+  wingWhite.classList.toggle("talking", game.speaking === "white");
+  wingBlack.classList.toggle("talking", game.speaking === "black");
+  wingWhite.classList.toggle("active", clockOwner === "white");
+  wingBlack.classList.toggle("active", clockOwner === "black");
+
+  // Moves are counted singly by the server, so two of them make one move
+  // of chess in the way it is normally written.
+  document.getElementById("movenum").textContent =
+    Math.ceil((game.move_count || 0) / 2);
+
+  const moves = game.moves || [];
+  document.getElementById("lastmove").textContent =
+    moves.length ? "·  " + moves[moves.length - 1] : "";
+
+  document.getElementById("verdict").textContent =
+    game.game_over ? endingWords(game) : "";
+
+  document.getElementById("hint").textContent =
+    game.game_over ? "" : (whatIsHoldingUsUp(game) || fullScreenHint);
+}
+
+// Nothing moving is the hardest thing to diagnose from across a room,
+// because a robot patiently waiting looks exactly like a robot that has
+// fallen over. This says which it is.
+function whatIsHoldingUsUp(game) {
+  const waitingOn = game.speaking || game.turn;
+
+  // A guest thinking is not a fault, and must never be reported as one. This
+  // has to come first: there is no program running for the human's colour, so
+  // the check below would otherwise announce that the guest had crashed.
+  if (humanColour && waitingOn === humanColour) {
+    return picked ? "now tap where it goes" : "your move — tap a piece";
+  }
+
+  // Which PROGRAM belongs to the side we are waiting on. In a guest's game
+  // the robot is always the one on this computer, whatever colour it has been
+  // left — so looking it up by colour would check the Mac, find nothing
+  // there, and announce that Goldie had failed to start when Goldie was never
+  // wanted.
+  const theirName = humanColour ? NAME_LOCAL
+                                : (waitingOn === "white" ? NAME_WHITE : NAME_BLACK);
+  const theirProgram = humanColour ? programs.white : programs[waitingOn];
+
+  if (!theirProgram) {
+    return "waiting for " + theirName + " — its program is not running";
+  }
+  return "";
+}
+
+// ── the wings, when one of them is a person ──────────────────────────────
+// The photo and the robot's name are wrong the moment a guest sits down on
+// that side. This was worth catching: the display would otherwise have shown
+// Lester's face and Lester's name above a human being's clock.
+let showingHuman = undefined;
+
+function showWhoIsPlaying(human) {
+  if (human === showingHuman) return;     // only redo it when it changes
+  showingHuman = human;
+
+  for (const colour of ["white", "black"]) {
+    const isPerson = human === colour;
+    // With a guest playing there is only ONE robot, and it is the one on this
+    // computer — whichever colour the guest left it. So its name follows it
+    // across, rather than the wing keeping the name of the colour.
+    const robotName = human ? NAME_LOCAL
+                            : (colour === "white" ? NAME_WHITE : NAME_BLACK);
+    document.getElementById("name-" + colour).textContent =
+      isPerson ? "You" : robotName;
+    document.getElementById("pic-" + colour).style.opacity = isPerson ? "0" : "";
+  }
+
+  // ── The two Start buttons are MACHINES, not colours ─────────────────────
+  //
+  // b-white starts the robot on this computer; b-black reaches the Mac.
+  // Which colour each plays is a separate question, and the first version
+  // confused the two: choosing "a person plays White" hid b-white — the only
+  // button that starts the robot standing on the desk — and left b-black,
+  // which went looking for a Mac that was not switched on. Nothing happened
+  // and there was no button that would have helped.
+  //
+  // With a guest playing, the Mac is not involved at all.
+  const local = document.getElementById("b-white");
+  const onTheMac = document.getElementById("b-black");
+  if (onTheMac) onTheMac.style.display = human ? "none" : "";
+  if (local) local.style.display = "";
+  localPlaysColour = human === "white" ? "black" : "white";
+}
+
+// Which colour the robot on this computer is playing, so its button can say
+// so. Only interesting when a guest is playing.
+let localPlaysColour = "white";
+
+// ── what the programs printed ────────────────────────────────────────────
+let logsForced = false;
+
+function paintLogs(p) {
+  setLog("log-server", p.server.log);
+  setLog("log-white", p.white.log);
+  setLog("log-black", p.black && p.black.log);
+
+  const casualties = [];
+  if (p.server.died) casualties.push("The game server");
+  if (p.white.died) casualties.push(NAME_WHITE + "'s program");
+
+  const alarm = document.getElementById("alarm");
+  if (casualties.length) {
+    alarm.textContent = casualties.join(" and ") +
+      " started and then stopped. What it printed is below.";
+    // Open by itself, once. Something that falls over silently is exactly
+    // the case where nobody thinks to go looking for a log.
+    if (!logsForced) {
+      logsForced = true;
+      document.getElementById("logs").classList.add("open");
+      wake();
+    }
+  } else {
+    alarm.textContent = "";
+    logsForced = false;
+  }
+}
+
+function setLog(id, lines) {
+  const box = document.getElementById(id);
+  const text = (lines || []).join("\n");
+  if (box.textContent === text) return;         // do not fight the scrollbar
+  const atBottom =
+    box.scrollHeight - box.scrollTop - box.clientHeight < 30;
+  box.textContent = text;
+  if (atBottom) box.scrollTop = box.scrollHeight;
+}
+
+function endingWords(game) {
+  if (game.resigned_by === "white") return NAME_BLACK + " wins — " + NAME_WHITE + " resigned";
+  if (game.resigned_by === "black") return NAME_WHITE + " wins — " + NAME_BLACK + " resigned";
+  if (game.result === "1-0") return NAME_WHITE + " wins";
+  if (game.result === "0-1") return NAME_BLACK + " wins";
+  if (game.result === "1/2-1/2") return "Drawn";
+  return "Stopped";
+}
+
+function paintButton(id, running, label, startWord, stopWord) {
+  const button = document.getElementById(id);
+  button.textContent = (running ? stopWord : startWord) + " " + label;
+  button.classList.toggle("on", running);
+}
+
+// ── the buttons ──────────────────────────────────────────────────────────
+async function tell(path, note) {
+  say(note || "working...");
+  try {
+    const response = await fetch(path, { method: "POST" });
+    const answer = await response.json();
+    say(answer.message || "");
+    return answer;
+  } catch (err) {
+    say("The control program is not answering.");
+    return null;
+  }
+  poll();
+}
+
+function say(words) {
+  document.getElementById("message").textContent = words;
+}
+
+document.getElementById("b-server").onclick = () =>
+  tell("/show/server/" + (programs.server ? "stop" : "start"),
+       programs.server ? "stopping..." : "starting Stockfish, this takes a moment...");
+
+document.getElementById("b-white").onclick = () =>
+  tell("/show/white/" + (programs.white ? "stop" : "start"));
+
+document.getElementById("b-black").onclick = () =>
+  tell("/show/black/" + (programs.black ? "stop" : "start"));
+
+// ── New game reloads the page ────────────────────────────────────────────
+//
+// The board is redrawn from the server twice a second, so in principle it
+// should show the new game by itself — and usually it did. Usually is not
+// good enough for the one button pressed in front of an audience, and a
+// manual refresh always worked where the button sometimes did not.
+//
+// A reload is the honest fix rather than a patch over whichever piece of
+// state was stale. Every single thing on this page is drawn from the server:
+// the position, the clocks, the names, the settings on the bar. There is
+// nothing here worth keeping, so throwing the lot away and asking again
+// cannot show anything but the truth.
+//
+// It reloads only when the server actually confirms the new game. If the
+// chess server is not running, the message saying so stays on screen instead
+// of being wiped by a refresh — which would look like the button doing
+// nothing at all.
+document.getElementById("b-new").onclick = async () => {
+  const answer = await tell("/show/newgame", "starting a new game...");
+  if (!answer || answer.ok === false) return;
+  location.reload();
+};
+
+document.getElementById("b-log").onclick = () => {
+  const panel = document.getElementById("logs");
+  panel.classList.toggle("open");
+  logsForced = panel.classList.contains("open");
+};
+
+document.getElementById("b-stop").onclick = async () => {
+  await tell("/show/white/stop");
+  await tell("/show/black/stop");
+  await tell("/show/server/stop");
+};
+
+async function sendSettings() {
+  const response = await fetch("/show/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      strength: document.getElementById("strength").value,
+      gap: parseFloat(document.getElementById("gap").value),
+      human: document.getElementById("mode").value,
+      polite: document.getElementById("polite").checked,
+      lang: document.getElementById("lang").value
+    })
+  });
+  let answer = {};
+  try { answer = await response.json(); } catch (err) { answer = {}; }
+
+  // Language is now the exception to "restart for it to take effect": it is
+  // handed to the running server the moment it changes. The old message told
+  // you to stop and start, and that restart was exactly the step that got
+  // skipped — one game went out in English with Español showing right here.
+  if (answer.language_now) {
+    say("Now speaking "
+        + (answer.language_now === "es" ? "Español" : "English") + ".");
+  } else {
+    say(programs.server
+        ? "Saved — stop and start the game server for it to take effect."
+        : "Saved.");
+  }
+}
+document.getElementById("strength").onchange = sendSettings;
+document.getElementById("gap").onchange = sendSettings;
+document.getElementById("polite").onchange = sendSettings;
+document.getElementById("lang").onchange = sendSettings;
+
+// Switching to a human opponent at club strength gives a guest a game they
+// cannot win, which is the one outcome that stops the next person asking for
+// a turn. So suggest something beatable — but only as a default, and only
+// when the strength has not been deliberately chosen already.
+document.getElementById("mode").onchange = () => {
+  const strength = document.getElementById("strength");
+  const mode = document.getElementById("mode").value;
+  if (mode && strength.value === "club") strength.value = "friendly";
+  if (mode) document.getElementById("polite").checked = true;
+  sendSettings();
+};
+
+// The controls start out showing whatever chess_show.py was started with, so
+// the bar and the program never disagree. Done once, on the first answer —
+// after that the bar is in charge, and re-reading it would fight the person
+// using it.
+let settingsSynced = false;
+function syncSettingsOnce(settings) {
+  if (settingsSynced || !settings) return;
+  settingsSynced = true;
+  if (settings.strength) document.getElementById("strength").value = settings.strength;
+  if (settings.gap !== undefined) document.getElementById("gap").value = String(settings.gap);
+  document.getElementById("mode").value = settings.human || "";
+  document.getElementById("polite").checked = !!settings.polite;
+  if (settings.lang) document.getElementById("lang").value = settings.lang;
+}
+
+// ── the photos ───────────────────────────────────────────────────────────
+// Asked for once. If the file is not there the panel simply stays plain
+// rather than showing a broken-image icon in front of an audience.
+for (const colour of ["white", "black"]) {
+  const test = new Image();
+  test.onload = () => {
+    document.getElementById("pic-" + colour).style.backgroundImage =
+      "url('/photo/" + colour + "?" + Date.now() + "')";
+  };
+  test.src = "/photo/" + colour + "?" + Date.now();
+}
+
+// ── full screen ──────────────────────────────────────────────────────────
+//
+// A real one, the sort a video player has — not F11, which a tablet has no
+// key for. This matters most on a phone or a small tablet, where the
+// browser's own toolbars eat enough of the screen to squeeze the board.
+//
+// THE IPHONE CANNOT DO THIS. Safari on iPhone supports the fullscreen API
+// for video only, and refuses it for an ordinary page. There is no way round
+// it, so rather than leave a button that quietly does nothing, we hide it and
+// say what to do instead: Add to Home Screen opens the page with no browser
+// chrome at all, which is the same result by another road.
+const stageEl = document.getElementById("stage");
+
+function canGoFullScreen() {
+  return !!(stageEl.requestFullscreen || stageEl.webkitRequestFullscreen ||
+            document.documentElement.requestFullscreen ||
+            document.documentElement.webkitRequestFullscreen);
+}
+
+function isFullScreen() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+async function toggleFullScreen() {
+  try {
+    if (isFullScreen()) {
+      const leave = document.exitFullscreen || document.webkitExitFullscreen;
+      if (leave) await leave.call(document);
+    } else {
+      // The whole document, not just the stage — otherwise the black
+      // surround outside the 16:9 box is left showing the page behind it.
+      const target = document.documentElement;
+      const enter = target.requestFullscreen || target.webkitRequestFullscreen;
+      if (enter) await enter.call(target);
+    }
+  } catch (err) {
+    // Some browsers refuse unless the tap is trusted, and some just refuse.
+    // Never let this throw into the polling loop.
+    say("This browser would not go full screen.");
+  }
+}
+
+function paintFullScreenButton() {
+  stageEl.classList.toggle("full", isFullScreen());
+}
+
+document.getElementById("b-full").onclick = toggleFullScreen;
+document.addEventListener("fullscreenchange", paintFullScreenButton);
+document.addEventListener("webkitfullscreenchange", paintFullScreenButton);
+
+if (!canGoFullScreen()) {
+  stageEl.classList.add("nofull");
+  // Only where it is true. On the iPhone this is the actual answer rather
+  // than a consolation prize — a page added to the Home Screen opens with no
+  // address bar and no toolbars, which is the same result by another road.
+  fullScreenHint = "for full screen, use Add to Home Screen";
+}
+
+// ── getting out of the way ───────────────────────────────────────────────
+// The control bar hides itself once you stop touching the mouse, so the
+// audience sees the board and nothing else. Any movement brings it back.
+let hideTimer = null;
+const stage = document.getElementById("stage");
+
+function wake() {
+  stage.classList.remove("hushed");
+  document.body.style.cursor = "default";
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => {
+    stage.classList.add("hushed");
+    document.body.style.cursor = "none";
+  }, 6000);
+}
+document.addEventListener("mousemove", wake);
+document.addEventListener("keydown", wake);
+// A tablet has no mouse to move, so without this the control bar would hide
+// itself six seconds in and there would be no way on earth to get it back.
+document.addEventListener("pointerdown", wake);
+wake();
+
+poll();
+setInterval(poll, 500);
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+# ============================================================================
+#  .gitignore - the list of things that must NEVER go up to GitHub
+# ============================================================================
+#
+#  Anything matching a line below is invisible to git. It stays on your own
+#  computer, it just never gets uploaded and never appears in the download.
+#
+#  If a file you DID want mysteriously refuses to appear on GitHub, this
+#  file is the first suspect. Ask git directly:
+#
+#      git check-ignore -v "the file name"
+#
+# ----------------------------------------------------------------------------
+
+# Your own settings, and any keys in them. This is the important one.
+.env
+.env.*
+!.env.example
+
+# The chess engine. It is a separate program, not part of this project:
+# 114 MB, and a different build for Windows, Mac and the Pi. GitHub refuses
+# any single file over 100 MB anyway. SETUP.bat fetches it on Windows;
+# on Mac and Pi it is a one-line install. See STOCKFISH_SETUP.md.
+/stockfish
+/stockfish.exe
+/stockfish/
+/stockfish-*.exe
+/stockfish-*.zip
+
+# Python's own leftovers. Rebuilt automatically, different on every machine.
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Log files written while the show runs.
+*.log
+logs/
+
+# Clutter the operating systems leave lying around.
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+
+# Written by install.sh, and different on every computer - they have this
+# machine's Python path baked in and the SERVER line is yours to edit.
+# Committing them would hand the next person a path that does not exist.
+/play-white.sh
+/play-black.sh
+/demo.sh
+
+# Written each time you push. Yours, not everyone's.
+/last push log.txt
+
+# ============================================================================
+#  Development notes — kept on Michael's computer, NOT published
+#  Added 2026-09-01. This repository is public, and everything below was
+#  written for us rather than for an audience: working plans, draft joke
+#  banks, scratch text, and the superseded 2025 code.
+# ============================================================================
+
+# Instructions to Claude, and the working plan behind the rebuild.
+CLAUDE.md
+HANDOFF_*.md
+
+# The 2025 code this project replaced. Kept for reference, not for release.
+archive/
+
+# Draft sentence banks and scratch text that fed into chess_templates.py.
+# The banks the show actually uses (chess_templates.py, chess_templates_es.py,
+# chess_templates_plain.py) ARE published — these are the working drafts.
+Chess_templates_chiriqui.py
+Chess_templates_local.py
+pana_picante_chiriqui.py
+Picante2.txt
+Spicy2.txt
+Template_chiriqui_en.txt
+Match start.txt
+mac setup.txt
+
+# Leftovers from the 2026-09-01 file recovery, and half-written edits.
+_recovery/
+chess_player_from_usb.py
+chess_player_RECOVERY_COPY.pyc
+*.new
