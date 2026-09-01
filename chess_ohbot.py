@@ -20,10 +20,19 @@ WHERE IT LOOKS
 In order, stopping at the first one that exists:
 
   1. OHBOT_DIR in a .env file next to this script
-  2. D:\\Projects\\OhbotPi2                      (Michael's Windows PC)
-  3. /home/michael/Projects/Ohbot                (the Raspberry Pis)
-  4. /Volumes/Projects/Ohbot                     (a Pi mounted on a Mac)
-  5. ../OhbotPi2 and ../Ohbot relative to this folder
+  2. ../OhbotPi2 and ../Ohbot — the folder NEXT TO this one
+  3. C:\\Projects\\OhbotPi2                      (a normal Windows install)
+  4. D:\\Projects\\OhbotPi2                      (Michael's own PC)
+  5. /home/michael/Projects/Ohbot                (the Raspberry Pis)
+  6. /Volumes/Projects/Ohbot                     (a Pi mounted on a Mac)
+
+**Looking next door comes second on purpose.** It is the only entry that
+needs no drive letter and no user name, so it is right on every machine as
+long as the two project folders sit side by side — which is how every setup
+guide here tells you to install them. The named paths below it are
+conveniences for machines already set up that way, not requirements. A new
+Windows PC will not have a D: drive at all, which is exactly why it cannot
+be the thing this relies on.
 
 If none of those exist it says so in plain English rather than throwing an
 import error at you.
@@ -49,11 +58,12 @@ def candidate_folders():
     parent = os.path.dirname(here)
     return [
         os.getenv("OHBOT_DIR"),
+        os.path.join(parent, "OhbotPi2"),
+        os.path.join(parent, "Ohbot"),
+        r"C:\Projects\OhbotPi2",
         r"D:\Projects\OhbotPi2",
         "/home/michael/Projects/Ohbot",
         "/Volumes/Projects/Ohbot",
-        os.path.join(parent, "OhbotPi2"),
-        os.path.join(parent, "Ohbot"),
     ]
 
 
@@ -91,7 +101,7 @@ def explain_and_stop():
     print()
     print("  ...containing one line, with your real path:")
     print()
-    print(r"      OHBOT_DIR=D:\Projects\OhbotPi2")
+    print(r"      OHBOT_DIR=C:\Projects\OhbotPi2")
     print()
     print("  The folder must contain yobot_core.py, ohbot_pi.py and")
     print("  ohbot_azure.py.")

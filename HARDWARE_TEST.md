@@ -43,7 +43,7 @@ python chess_needs.py
 lives in a file called `.env` in the **OhbotPi2** folder — not this one:
 
 ```
-D:\Projects\OhbotPi2\.env
+C:\Projects\OhbotPi2\.env
 ```
 
 It needs these two lines:
@@ -73,7 +73,7 @@ python chess_player.py --say-once
   Yobot — WHITE
 ======================================================================
 
-  Borrowing robot code from: D:\Projects\OhbotPi2
+  Borrowing robot code from: C:\Projects\OhbotPi2
 
   Connecting to the robot...
   Robot connected.
@@ -116,7 +116,7 @@ again. The serial port sticks sometimes and a replug clears it.
 Make a file called `.env` in the **Chess** folder with one line:
 
 ```
-OHBOT_DIR=D:\Projects\OhbotPi2
+OHBOT_DIR=C:\Projects\OhbotPi2
 ```
 
 **"AZURE SPEECH WOULD NOT START"** — the key is missing or wrong. See above.

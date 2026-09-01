@@ -17,7 +17,7 @@ itself so you can judge the layout, the size of the pieces and whether the
 names read from the back of the room.
 
 ```
-cd /d D:\Projects\Chess
+cd /d C:\Projects\Chess
 python chess_show.py --demo
 ```
 
@@ -137,7 +137,7 @@ check is in `HANDOFF_chess_modernization.md`, under *Spanish commentary*.
 
 ## The photos
 
-Drop two files into `D:\Projects\Chess`:
+Drop two files into `C:\Projects\Chess`:
 
 ```
 white_player.jpg        Lester

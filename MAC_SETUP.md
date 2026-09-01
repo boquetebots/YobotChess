@@ -64,7 +64,7 @@ blank, which is why the good numbers never reached the profile.
 Then check it:
 
 ```
-cd /d D:\Projects\OhbotPi2
+cd /d C:\Projects\OhbotPi2
 python check_motors.py
 ```
 
@@ -212,14 +212,14 @@ Do not move on until this works. Everything after it depends on it.
 **Windows, window 1 — the brain:**
 
 ```
-cd /d D:\Projects\Chess
+cd /d C:\Projects\Chess
 python chess_server.py --strength club
 ```
 
 **Windows, window 2 — White:**
 
 ```
-cd /d D:\Projects\Chess
+cd /d C:\Projects\Chess
 python chess_player.py --colour white --start
 ```
 

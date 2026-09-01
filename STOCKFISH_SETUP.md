@@ -39,7 +39,7 @@ build gives you a far stronger player than any human in the room.
 **3.** Drag that one file into your Chess folder:
 
 ```
-D:\Projects\Chess
+C:\Projects\Chess
 ```
 
 That is all. You do not have to install anything, edit anything, or tell the
@@ -114,7 +114,7 @@ which one it chose, so there are no surprises.
 likeliest cause is that the ZIP was never actually unzipped. On Windows,
 double-clicking a ZIP lets you *look inside* without extracting anything;
 you have to drag the file out. Check the file really is sitting in
-`D:\Projects\Chess` on its own.
+`C:\Projects\Chess` on its own.
 
 **"IT WOULD NOT START"** — usually the wrong build for your processor. Go
 back to the ZIP and use the plainest `x86-64` name. If you already did, try

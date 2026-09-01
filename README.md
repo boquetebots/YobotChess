@@ -101,7 +101,7 @@ The `.env` file *in the chess folder* is a different thing entirely, and
 optional. It holds only two settings, neither of them secret:
 
 ```
-OHBOT_DIR=D:\Projects\OhbotPi2
+OHBOT_DIR=C:\Projects\OhbotPi2
 STOCKFISH_PATH=C:\somewhere\stockfish.exe
 ```
 

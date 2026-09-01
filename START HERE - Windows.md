@@ -74,14 +74,14 @@ holding `yobot_core.py`, `ohbot_pi.py` and `ohbot_azure.py`:
 
 1. `OHBOT_DIR` in a file called `.env` next to the chess programs
 2. `%USERPROFILE%\Projects\Ohbot` and `%USERPROFILE%\Projects\OhbotPi2`
-3. `D:\Projects\OhbotPi2`
+3. `C:\Projects\OhbotPi2`
 4. a folder called `OhbotPi2` or `Ohbot` next to this one
 
 If yours is somewhere else, make a plain text file called `.env` in this
 folder with one line in it:
 
 ```
-OHBOT_DIR=D:\Projects\OhbotPi2
+OHBOT_DIR=C:\Projects\OhbotPi2
 ```
 
 Now make the robot say one sentence — no chess, no game, no second computer:
