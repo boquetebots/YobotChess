@@ -1,0 +1,76 @@
+======================================================================
+  YOBOT CHESS
+  Un robot juega ajedrez en voz alta, y habla de lo que hace.
+
+  Siéntate, toca una pieza y juega. O pon dos de ellos a jugar
+  uno contra el otro frente a un salón lleno de gente.
+======================================================================
+
+  La versión en inglés de este archivo es  "READ ME FIRST.txt"
+
+
+  Ya tienes los archivos. Todavía nada funciona. Escoge tu
+  computadora y abre el único archivo que le corresponde:
+
+
+  PC CON WINDOWS .... abre   START HERE - Windows.md
+
+  RASPBERRY PI ...... abre   START HERE - Raspberry Pi.md
+
+  MAC ............... abre   START HERE - Mac.md
+
+
+  Esos archivos .md son solo texto. Cualquiera de ellos se abre en
+  Notepad, TextEdit, o en lo que use tu computadora para un archivo
+  de texto. Se ven más ordenados en GitHub, donde los títulos salen
+  como títulos.
+
+
+----------------------------------------------------------------------
+  ¿DESCARGASTE ESTO COMO ZIP?
+----------------------------------------------------------------------
+
+  Entonces tu carpeta se llama  YobotChess-main.  Cámbiale el nombre
+  a  Chess  y ponla en  C:\Projects  (Windows) o  ~/Projects  (Mac y
+  Pi), justo al lado de la carpeta del propio robot, que debe
+  llamarse  OhbotPi2.
+
+  Lado a lado es como el juego encuentra al robot. Tu archivo START
+  HERE lo vuelve a decir, con las carpetas dibujadas.
+
+
+----------------------------------------------------------------------
+  ALGO QUE VALE LA PENA SABER ANTES DE EMPEZAR
+----------------------------------------------------------------------
+
+  Hay DOS proyectos, y este es solo uno de ellos.
+
+    OhbotPi2   el robot mismo - los motores, la voz, la boca.
+    Chess      este - el juego, el tablero, lo que dicen de él.
+
+  Chess toma prestado el robot de OhbotPi2 en vez de guardar su
+  propia copia, así que un arreglo en un lado arregla los dos. Eso
+  quiere decir:
+
+    * Una computadora con un ROBOT conectado necesita LOS DOS
+      proyectos.
+    * Una computadora que solo corre el juego y la pantalla necesita
+      solo este.
+
+  Si todavía no has instalado OhbotPi2, hazlo primero. Está en:
+
+      https://github.com/boquetebots/OhbotPi
+
+
+----------------------------------------------------------------------
+  ¿ESTÁS APURADO? VELO FUNCIONAR SIN NADA CONECTADO
+----------------------------------------------------------------------
+
+  Después del paso de instalación de tu archivo START HERE, esto
+  repite en la pantalla una partida famosa, sin robots y sin motor
+  de ajedrez:
+
+      Windows:     haz doble clic en   Demo - no robots.bat
+      Mac y Pi:    bash demo.sh
+
+  Luego abre  http://localhost:8080/  en un navegador.

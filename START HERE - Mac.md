@@ -1,5 +1,7 @@
 # START HERE — Mac
 
+> **¿Prefieres español?** Lee **`EMPIEZA AQUI - Mac (Espanol).md`**, en esta misma carpeta.
+
 A Mac in this system usually drives **the second robot** — Goldie — while the
 Windows PC runs the game. It can also run the whole show on its own.
 

@@ -1,5 +1,7 @@
 # START HERE — Windows
 
+> **¿Prefieres español?** Lee **`EMPIEZA AQUI - Windows (Espanol).md`**, en esta misma carpeta.
+
 The everyday setup is **one laptop, one robot, one guest**. The laptop runs the
 chess engine, the robot and the board on screen. Someone sits down, taps a
 piece, and plays the robot — which answers out loud, with its mouth moving.

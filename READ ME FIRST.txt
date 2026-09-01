@@ -17,6 +17,10 @@
   MAC ............... open   START HERE - Mac.md
 
 
+  EN ESPANOL ........ lee    LEE ESTO PRIMERO (Espanol).txt
+                             y el "EMPIEZA AQUI" de tu computadora
+
+
   Those .md files are just text. Any of them will open in Notepad,
   TextEdit, or whatever your computer uses for a text file. They will
   look tidier on GitHub, where the headings come out as headings.

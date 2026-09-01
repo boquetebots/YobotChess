@@ -1,5 +1,8 @@
 # Yobot Chess
 
+> **¿Prefieres español?** Cada guía tiene su versión: busca los archivos
+> que empiezan con **`EMPIEZA AQUI`**, y **`LEE ESTO PRIMERO (Espanol).txt`**.
+
 **The usual setup: one laptop, one robot, one guest.** Someone sits down, taps
 a piece on the screen and plays the robot. It announces its own moves out loud,
 comments on theirs, pounces when they give something away, and moves its head,

@@ -1,5 +1,7 @@
 # START HERE — Raspberry Pi
 
+> **¿Prefieres español?** Lee **`EMPIEZA AQUI - Raspberry Pi (Espanol).md`**, en esta misma carpeta.
+
 A Pi in this system is a **player controller**. It drives one robot: it asks
 the game "what do I say and how do I move?", says it with the mouth moving,
 and animates the head and eyes between turns.
@@ -29,7 +31,7 @@ say hello yet, stop here and get that going first:
 
 You also need to know the **name or address of the computer running the
 game** — usually the Windows PC. On a Tailscale network the name is enough
-(`pibot`, `lester-pc`); otherwise get its address with `ipconfig` on Windows
+(`yobot1`, `lester-pc`); otherwise get its address with `ipconfig` on Windows
 or `hostname -I` on a Pi.
 
 ---
