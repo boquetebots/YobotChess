@@ -102,19 +102,23 @@ connections.
 
 ### 4. Get the Chess folder across
 
-**The Chess project is not in git** — there is no repository and no remote,
-unlike OhbotPi2. So it has to be copied by hand. Any of these is fine:
+**Chess is on GitHub**, so the Mac takes its own copy:
 
-- AirDrop the whole `Chess` folder from the PC (simplest if both are nearby)
-- A USB stick
-- Over the network, from the Mac:
-  ```bash
-  scp -r michael@<windows-ip>:/d/Projects/Chess ~/Projects/Chess
-  ```
+```bash
+cd ~/Projects
+git clone https://github.com/boquetebots/YobotChess.git Chess
+```
 
-Put it at `~/Projects/Chess`. Leave out `stockfish-windows-x86-64-avx2.exe` —
-it is a Windows program and the Mac has no use for it. The Mac never thinks
-about chess.
+No git on this Mac? Use the green **Code** button on
+<https://github.com/boquetebots/YobotChess>, choose **Download ZIP**, unzip it
+into `~/Projects` and rename the folder from `YobotChess-main` to `Chess`.
+
+It belongs at `~/Projects/Chess`, beside `~/Projects/OhbotPi2` — that is how
+`chess_ohbot.py` finds the robot code with nothing to configure.
+
+Stockfish is not part of the download, and the Mac has no use for the Windows
+one anyway. `install.sh` fetches the Mac's own through Homebrew, and only the
+machine actually running the game needs it.
 
 ### 5. Tell the Mac which OhbotPi2 to use
 
