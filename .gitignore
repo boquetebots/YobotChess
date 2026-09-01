@@ -89,3 +89,8 @@ chess_player_RECOVERY_COPY.pyc
 # A personal email draft, not part of the project. It would be published
 # with everything else if it were tracked.
 EMAIL - *.txt
+
+# Michael's own publishing script, added 2026-09-01. Nobody else can push to
+# this repo, so it is no use to anyone who downloads Chess. It stays in this
+# folder; it just stops going up to GitHub.
+Push CHESS to GitHub.command
