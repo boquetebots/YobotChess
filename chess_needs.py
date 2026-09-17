@@ -82,8 +82,21 @@ def python_cmd():
 
 
 def _install_command(packages):
-    """The right install line for whichever computer this is."""
+    """
+    The right install line for whichever computer this is.
+
+    If this program is running inside a Python sandbox — which it is on any
+    machine that has the robot project set up, because the robot's voice is
+    installed in there — then `py -m pip install` is the WRONG line to print.
+    It would install the package into the system Python, the message would
+    appear again next time, and the person would quite reasonably conclude the
+    install had not worked. Naming this exact Python is uglier to read and is
+    the only version that actually fixes anything. Added 2026-09-17.
+    """
     names = " ".join(packages)
+    in_sandbox = sys.prefix != getattr(sys, "base_prefix", sys.prefix)
+    if in_sandbox and sys.executable:
+        return f'"{sys.executable}" -m pip install {names}'
     if sys.platform.startswith("win"):
         return f"py -m pip install {names}"
     return f"pip3 install {names}"

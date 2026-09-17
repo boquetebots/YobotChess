@@ -16,7 +16,17 @@ REM  Closing this window stops it.
 
 cd /d "%~dp0"
 
+REM  Yobot's own Python sandbox comes FIRST when it is there. The robot
+REM  project (OhbotPi2) builds one at %USERPROFILE%\yobot-venv and puts the
+REM  Azure voice and the USB driver in it, NOT in the system Python. Chess
+REM  borrows both, so with a robot plugged in it must run out of that same
+REM  sandbox or the robot cannot speak - while the board, the engine and the
+REM  demo all carry on working, which is what makes it so hard to spot.
+REM  Added 2026-09-17. SETUP.bat has the whole story.
 set PY=
+set "VENVPY=%USERPROFILE%\yobot-venv\Scripts\python.exe"
+if exist "%VENVPY%" set "PY=%VENVPY%"
+if not "%PY%"=="" goto have_python
 where python >nul 2>&1
 if not errorlevel 1 set PY=python
 if not "%PY%"=="" goto have_python
@@ -40,7 +50,7 @@ echo.
 
 start "" /b powershell -NoProfile -WindowStyle Hidden -Command "$stop=(Get-Date).AddSeconds(90); $up=$false; while((Get-Date) -lt $stop) { try { $c=New-Object Net.Sockets.TcpClient('127.0.0.1',8080); $c.Close(); $up=$true; break } catch { Start-Sleep -Milliseconds 400 } }; if ($up) { Start-Process 'http://localhost:8080/'; Start-Sleep -Seconds 4; (New-Object -ComObject WScript.Shell).SendKeys('{F11}') }"
 
-%PY% chess_show.py --demo
+"%PY%" chess_show.py --demo
 
 echo.
 echo    The demo has stopped.

@@ -42,12 +42,30 @@ echo    Folder: %PROJ%
 echo.
 
 REM ---------------------------------------------------------------------------
-REM  Which command runs Python on this computer. Some machines have "python",
-REM  some only have "py". Written out longhand on purpose - the tidier
-REM  one-line version using ^&^& is wrong, because cmd splits the line before
-REM  the "if" has been decided.
+REM  WHICH PYTHON THIS COMPUTER SHOULD USE
+REM
+REM  Yobot's own Python sandbox comes FIRST when it exists. The robot project
+REM  (OhbotPi2) builds one at %USERPROFILE%\yobot-venv and installs the Azure
+REM  voice and the USB driver INTO it, not into the system Python. Chess
+REM  borrows its voice and its motors from that project, so on a laptop with a
+REM  robot plugged in, chess has to run out of that same sandbox or the robot
+REM  cannot speak.
+REM
+REM  Added 2026-09-17, after a laptop where the board, the engine and the demo
+REM  all worked perfectly and the robot never said one word. Nothing was wrong
+REM  with the robot, the key or the cable: chess was simply running a Python
+REM  that could not see the Azure package.
+REM
+REM  No sandbox found means no robot project on this machine, which is fine -
+REM  the game, the board and the demo all run on the system Python. Some
+REM  machines have "python", some only have "py". Written out longhand on
+REM  purpose - the tidier one-line version using ^&^& is wrong, because cmd
+REM  splits the line before the "if" has been decided.
 REM ---------------------------------------------------------------------------
 set PY=
+set "VENVPY=%USERPROFILE%\yobot-venv\Scripts\python.exe"
+if exist "%VENVPY%" set "PY=%VENVPY%"
+if not "%PY%"=="" goto have_python
 where python >nul 2>&1
 if not errorlevel 1 set PY=python
 if not "%PY%"=="" goto have_python
@@ -57,7 +75,23 @@ if not errorlevel 1 set PY=py
 if "%PY%"=="" goto no_python
 
 echo    Python found: %PY%
+if not "%PY%"=="%VENVPY%" goto no_sandbox
 echo.
+echo    That is Yobot's own sandbox, shared with the robot project. Good -
+echo    it is the one that has the robot's voice in it.
+echo.
+goto sandbox_said
+:no_sandbox
+echo.
+echo    That is this computer's ordinary Python. Fine for the game, the
+echo    board and the demo.
+echo.
+echo    IF A ROBOT IS PLUGGED INTO THIS LAPTOP, stop and set up the robot
+echo    project first - OhbotPi2, its SETUP.bat - then run this one again.
+echo    Chess borrows the robot's voice from there, and the voice installs
+echo    into a sandbox this run cannot see yet.
+echo.
+:sandbox_said
 
 
 REM ---------------------------------------------------------------------------
@@ -71,8 +105,8 @@ echo    This downloads three small things: the chess rules, the little web
 echo    server, and the bit that reads settings out of a file.
 echo.
 
-%PY% -m pip install --upgrade pip
-%PY% -m pip install -r "%PROJ%\requirements.txt"
+"%PY%" -m pip install --upgrade pip
+"%PY%" -m pip install -r "%PROJ%\requirements.txt"
 if errorlevel 1 goto pip_failed
 
 echo.
@@ -144,7 +178,7 @@ echo  ----------------------------------------------------------------------
 echo    Checking it over
 echo  ----------------------------------------------------------------------
 echo.
-%PY% "%PROJ%\check_stockfish.py"
+"%PY%" "%PROJ%\check_stockfish.py"
 
 echo.
 echo  ======================================================================
@@ -195,7 +229,7 @@ echo        run as administrator
 echo.
 echo    You can try it by hand in this window:
 echo.
-echo        %PY% -m pip install chess flask python-dotenv
+echo        "%PY%" -m pip install chess flask python-dotenv
 echo.
 pause
 goto end

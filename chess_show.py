@@ -554,7 +554,26 @@ def build_app(settings):
     else:
         pretend = None
 
-    python = python_cmd()
+    # ── The programs we start must run the SAME Python as this one ───────────
+    #
+    # This line used to be python_cmd(), which hands back the bare word
+    # "python" — whatever that happens to mean on this machine's PATH. On a
+    # laptop with a robot plugged in that is the wrong answer, and it fails in
+    # the most misleading way there is.
+    #
+    # The robot project installs the Azure voice and the USB driver into its
+    # own Python sandbox rather than into the system Python. The launcher
+    # starts THIS program out of that sandbox — and then this line started the
+    # player with a different Python that has never heard of Azure. The board
+    # drew, the clocks ran, the engine played, and the robot never said a word.
+    # Nothing was wrong with the key, the cable or the robot.
+    #
+    # sys.executable means "the Python that is running me", so the children now
+    # always land wherever the parent already is. python_cmd() is still the
+    # right answer for anything PRINTED, because that is what a person types.
+    #
+    # Found 2026-09-17, on a laptop where everything else worked.
+    python = sys.executable or python_cmd()
 
     # ── These two are MACHINES, not colours ──────────────────────────────────
     #

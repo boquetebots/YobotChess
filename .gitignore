@@ -94,3 +94,6 @@ EMAIL - *.txt
 # this repo, so it is no use to anyone who downloads Chess. It stays in this
 # folder; it just stops going up to GitHub.
 Push CHESS to GitHub.command
+
+# Message drafts for people I hand a robot to. Local only.
+WHATSAPP - *.txt

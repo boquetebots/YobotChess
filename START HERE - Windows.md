@@ -109,6 +109,23 @@ what it found.
 > publisher. If setup says the engine will not start, look in the quarantine
 > list for "stockfish" and allow it.
 
+### Do the robot project first, or this step half-works
+
+Setup prints which Python it is using, and that line matters more than it
+looks.
+
+The robot project keeps its Python add-ons — including the Azure voice — in a
+sandbox of its own rather than in the computer's ordinary Python. Chess borrows
+that voice. So **chess has to run out of the same sandbox**, and the way that
+happens is simply that the robot project is set up *before* this one. Setup
+finds the sandbox, installs into it, and every launcher here uses it from then
+on.
+
+Run this one first and you get a working board, a working engine, a working
+demo — and a robot that never speaks, with nothing on screen to say why. If
+that is where you are, set up the robot project and then **run `SETUP.bat` here
+again**. It is safe to run as many times as you like.
+
 ---
 
 ## 4. Try it with nothing plugged in
@@ -154,6 +171,11 @@ python chess_player.py --say-once
 says nothing at all, the fault is on the OhbotPi2 side and `HARDWARE_TEST.md`
 is the walkthrough for it. Sort that out before going on; everything else is
 downstream.
+
+> **If it says the Azure voice is not installed, and the robot project works
+> perfectly on this same laptop**, you are running the wrong Python — see *Do
+> the robot project first* under step 3. Run `SETUP.bat` here again and start
+> chess from `Play a Human.bat` rather than by typing `python` yourself.
 
 ---
 
